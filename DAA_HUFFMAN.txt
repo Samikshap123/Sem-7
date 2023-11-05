@@ -1,85 +1,69 @@
 import java.util.PriorityQueue;
-import java.util.HashMap;
+import java.util.Scanner;
 
-class HuffmanNode implements Comparable<HuffmanNode> {
-	int frequency;
-	char data;
-	HuffmanNode left, right;
+class Node implements Comparable<Node> {
+    int freq;
+    String symbol;
+    Node left;
+    Node right;
+    String huff;
 
-	public HuffmanNode(int frequency, char data) {
-    	this.frequency = frequency;
-    	this.data = data;
-    	this.left = null;
-    	this.right = null;
-	}
+    public Node(int freq, String symbol, Node left, Node right) {
+        this.freq = freq;
+        this.symbol = symbol;
+        this.left = left;
+        this.right = right;
+        this.huff = "";
+    }
 
-	@Override
-	public int compareTo(HuffmanNode node) {
-    	return this.frequency - node.frequency;
-	}
+    @Override
+    public int compareTo(Node nxt) {
+        return Integer.compare(this.freq, nxt.freq);
+    }
 }
 
-public class HuffmanEncoding {
+class Main {
+    public static void printNodes(Node node, String val) {
+        String newVal = val + node.huff;
+        if (node.left != null) {
+            printNodes(node.left, newVal);
+        }
+        if (node.right != null) {
+            printNodes(node.right, newVal);
+        }
+        if (node.left == null && node.right == null) {
+            System.out.println(node.symbol + " -> " + newVal);
+        }
+    }
 
-	static HashMap<Character, String> huffmanCodes = new HashMap<>();
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
 
-	public static void generateCodes(HuffmanNode root, String code) {
-    	if (root == null) return;
+        System.out.print("Enter characters (separated by spaces): ");
+        String[] chars = scanner.nextLine().split(" ");
 
-    	if (root.left == null && root.right == null) {
-        	huffmanCodes.put(root.data, code);
-    	}
+        System.out.print("Enter frequencies (separated by spaces): ");
+        String[] frequencies = scanner.nextLine().split(" ");
+        int[] freq = new int[frequencies.length];
+        for (int i = 0; i < frequencies.length; i++) {
+            freq[i] = Integer.parseInt(frequencies[i]);
+        }
 
-    	generateCodes(root.left, code + "0");
-    	generateCodes(root.right, code + "1");
-	}
+        PriorityQueue<Node> nodes = new PriorityQueue<>();
+        for (int i = 0; i < chars.length; i++) {
+            nodes.add(new Node(freq[i], chars[i], null, null));
+        }
 
-	public static void buildHuffmanTree(String input) {
-    	HashMap<Character, Integer> frequencyMap = new HashMap<>();
+        while (nodes.size() > 1) {
+            Node left = nodes.poll();
+            Node right = nodes.poll();
+            left.huff = "0";
+            right.huff = "1";
+            Node newNode = new Node(left.freq + right.freq, left.symbol + right.symbol, left, right);
+            nodes.add(newNode);
+        }
 
-    	for (char c : input.toCharArray()) {
-        	frequencyMap.put(c, frequencyMap.getOrDefault(c, 0) + 1);
-    	}
-
-    	PriorityQueue<HuffmanNode> priorityQueue = new PriorityQueue<>();
-
-    	for (char key : frequencyMap.keySet()) {
-        	priorityQueue.add(new HuffmanNode(frequencyMap.get(key), key));
-    	}
-
-    	while (priorityQueue.size() > 1) {
-        	HuffmanNode left = priorityQueue.poll();
-        	HuffmanNode right = priorityQueue.poll();
-
-        	int sum = left.frequency + right.frequency;
-        	HuffmanNode newNode = new HuffmanNode(sum, '-');
-        	newNode.left = left;
-        	newNode.right = right;
-
-        	priorityQueue.add(newNode);
-    	}
-
-    	HuffmanNode root = priorityQueue.poll();
-    	generateCodes(root, "");
-	}
-
-	public static String encode(String input) {
-    	StringBuilder encodedString = new StringBuilder();
-
-    	for (char c : input.toCharArray()) {
-        	encodedString.append(huffmanCodes.get(c));
-    	}
-
-    	return encodedString.toString();
-	}
-
-	public static void main(String[] args) {
-    	String input = "hello";
-    	buildHuffmanTree(input);
-
-    	String encodedString = encode(input);
-
-    	System.out.println("Original String: " + input);
-    	System.out.println("Encoded String: " + encodedString);
-	}
+        Node root = nodes.poll();
+        printNodes(root, "");
+    }
 }
